@@ -15,6 +15,6 @@ func SetUpRouter() *gin.Engine {
 	})
 
 	router.GET("/transactions", handlers.GetTransactions)
-
+	router.POST("/transactions", handlers.CreateTransaction)
 	return router
 }

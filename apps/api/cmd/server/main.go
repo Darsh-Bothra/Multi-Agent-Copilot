@@ -4,6 +4,9 @@ import (
 	// "log" // for logging the message
 	// "net/http" // for core http server in go
 	// "github.com/gin-gonic/gin"
+	"api/internal/config"
+	"api/internal/db"
+	"api/internal/logger"
 	"api/routes"
 )
 
@@ -37,7 +40,20 @@ func main() {
 		using router imports
 		Handler -> Service -> Repository
 	*/
+
+	// Initializing the logger
+	logger.InitLogger();
+	defer logger.Log.Sync();
+
+	config.LoadConfig();
+
+	// Initializing the database
+	db.InitDB();
+	
+	logger.Log.Info("Server Starting...")
+
+	// Router configuration
 	router := routes.SetUpRouter()
-	router.Run(":8080")
+	router.Run(":" + config.Appcfg.Port)
 
 }
