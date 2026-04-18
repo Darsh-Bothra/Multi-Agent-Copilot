@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"api/internal/validator"
+	"api/pkg/errors"
 	"api/service"
 	"net/http"
 
@@ -33,8 +34,9 @@ func CreateTransaction(ctx *gin.Context) {
 
 	// Step 1: for parsing the struct body and Bind the json
 	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H {
-			"error": "Invalid Error"});
+		ctx.JSON(http.StatusBadRequest, 
+			errors.NewBadRequest("invalid input"))
+			
 		return;
 	}
 

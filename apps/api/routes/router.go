@@ -2,11 +2,16 @@ package routes
 
 import (
 	"api/handlers"
+	"api/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
 func SetUpRouter() *gin.Engine {
-	router := gin.Default()
+	router := gin.New()
+
+	router.Use(middleware.RequestId())
+	router.Use(middleware.Logger())
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{

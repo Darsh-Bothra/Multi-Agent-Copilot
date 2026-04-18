@@ -13,7 +13,7 @@ func GetAllTransaction() ([]models.Transaction, error) {
 	}
 
 	// for memory cleanup
-	defer row.Close()
+	defer row.Close()                                            
 
 	var transactions []models.Transaction
 
