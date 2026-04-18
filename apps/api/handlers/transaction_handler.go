@@ -43,6 +43,7 @@ func CreateTransaction(ctx *gin.Context) {
 	// Step 2: Validate
 	if err := validator.Validate.Struct(input); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H {"error": err.Error()});
+		return;
 	}
 
 	// Step 3 : Service layer

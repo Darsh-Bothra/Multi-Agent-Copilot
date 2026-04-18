@@ -7,6 +7,7 @@ import (
 	"api/internal/config"
 	"api/internal/db"
 	"api/internal/logger"
+	"api/internal/validator"
 	"api/routes"
 )
 
@@ -42,14 +43,16 @@ func main() {
 	*/
 
 	// Initializing the logger
-	logger.InitLogger();
-	defer logger.Log.Sync();
+	logger.InitLogger()
+	defer logger.Log.Sync()
 
-	config.LoadConfig();
+	config.LoadConfig()
+
+	validator.InitValidator()
 
 	// Initializing the database
-	db.InitDB();
-	
+	db.InitDB()
+
 	logger.Log.Info("Server Starting...")
 
 	// Router configuration

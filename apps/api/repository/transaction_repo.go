@@ -21,7 +21,7 @@ func GetAllTransaction() ([]models.Transaction, error) {
 		var t models.Transaction
 
 		// maps DB columns → struct fields	
-		err := row.Scan(&t.ID, &t.Amount, &t.Amount)
+		err := row.Scan(&t.ID, &t.Amount, &t.Merchant)
 		if err != nil {
 			return nil, err
 		}

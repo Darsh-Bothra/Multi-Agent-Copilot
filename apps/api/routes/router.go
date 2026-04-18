@@ -8,18 +8,22 @@ import (
 )
 
 func SetUpRouter() *gin.Engine {
+
 	router := gin.New()
 
+	// Middleware
 	router.Use(middleware.RequestId())
 	router.Use(middleware.Logger())
 
-	router.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	// Routes
+	router.POST("/groups", handlers.CreateGroup)
+	router.POST("/expenses", handlers.AddExpense)
+
+	router.GET("/groups/:group_id/balances", handlers.GetBalances)
+	router.GET("/groups/:group_id/settlements", handlers.GetSettlements)
 
 	router.GET("/transactions", handlers.GetTransactions)
 	router.POST("/transactions", handlers.CreateTransaction)
+
 	return router
 }

@@ -102,6 +102,7 @@ func GetExpensesByGroup(groupId string) ([]models.Expense, error) {
 		err := row.Scan(
 			&expense.ID,
 			&expense.GroupId,
+			&expense.PaidBy,
 			&expense.Amount,
 			&expense.Description,
 			&expense.CreatedAt,

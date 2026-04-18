@@ -25,8 +25,8 @@ func InitDB() {
 		config.Appcfg.DBName,
 		config.Appcfg.DBSSLMode,
 	)
-
-	DB, err := sql.Open("postgres", str);
+	var err error
+	DB, err = sql.Open("postgres", str)
 
 	if err != nil {
 		logger.Log.Error("Error in opening DB", zap.Error(err))
