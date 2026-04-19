@@ -25,5 +25,12 @@ func SetUpRouter() *gin.Engine {
 	router.GET("/transactions", handlers.GetTransactions)
 	router.POST("/transactions", handlers.CreateTransaction)
 
+	router.POST("/signup", handlers.Signup);
+	router.POST("/login", handlers.Login);
+
+	// Protected Routes
+	authRoutes := router.Group("/")
+	authRoutes.Use(middleware.AuthMiddleware())
+
 	return router
 }
