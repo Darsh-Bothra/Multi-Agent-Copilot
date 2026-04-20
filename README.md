@@ -12,6 +12,7 @@ This repository is suitable as a **starting point** for production systems: clea
 - [🗂️ Repository layout](#repository-layout)
 - [✅ Prerequisites](#prerequisites)
 - [⚙️ Configuration](#configuration)
+- [🐳 Docker (Dev + Prod)](#docker-dev--prod)
 - [🚀 Run the app (step by step)](#run-the-app-step-by-step)
 - [🌐 REST API (Go)](#rest-api-go)
 - [🐍 Agent service (Python)](#agent-service-python)
@@ -80,6 +81,133 @@ Loaded from the process environment. You may place an `apps/api/.env` file (see 
 |----------|---------|-------------|
 | `OPENAI_API_KEY` | _(unset)_ | API key for OpenAI-compatible chat models 🔑 |
 | `BACKEND_URL` | `http://localhost:8080` | Base URL of the Go API for HTTP tools 🔗 |
+
+## 🐳 Docker (Dev + Prod)
+
+This repo now includes:
+
+- `apps/api/Dockerfile` (Go API image, with `dev` and `prod` targets)
+- `apps/agent-service/Dockerfile` (Python agent image, with `dev` and `prod` targets)
+- `docker-compose.yml` (orchestrates API + agent + Postgres)
+- `.dockerignore` (shrinks build context for faster builds)
+- `.env.example` (template for your local `.env`)
+
+### 1) First concepts (beginner-friendly)
+
+- **Image**: a packaged blueprint (filesystem + startup command).
+- **Container**: a running instance of an image.
+- **Dockerfile**: recipe used to build an image.
+- **Compose**: runs multiple containers together as one app.
+- **Build context**: files sent to Docker daemon during build. Smaller context = faster builds, so `.dockerignore` matters.
+
+### 2) Prepare your `.env`
+
+From repository root:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and set real values, especially:
+
+- `OPENAI_API_KEY`
+- `DB_PASSWORD` (change from default if you want)
+
+Compose automatically reads `.env` from project root and substitutes `${VAR_NAME}` in `docker-compose.yml`.
+
+### 3) Development profile (live coding)
+
+Run:
+
+```bash
+docker compose --profile dev up --build
+```
+
+What this does:
+
+- builds `api` from `apps/api/Dockerfile` target `dev`
+- builds `agent-service` from `apps/agent-service/Dockerfile` target `dev`
+- starts `postgres` with persistent `postgres_data` volume
+- mounts your source folders into containers for quick iteration:
+  - `./apps/api:/app`
+  - `./apps/agent-service:/app`
+
+Open endpoints:
+
+- API: `http://localhost:8080`
+- Agent: `http://localhost:8000`
+- Agent docs: `http://localhost:8000/docs`
+
+### 4) Production-style profile (optimized runtime path)
+
+Run:
+
+```bash
+docker compose --profile prod up --build
+```
+
+This uses:
+
+- `api-prod` service (build target `prod`)
+- `agent-service-prod` service (build target `prod`)
+- same `postgres` service
+
+Important: prod profile avoids dev bind mounts and uses production startup commands (no auto-reload).
+
+### 5) Why key Dockerfile lines exist
+
+For `apps/api/Dockerfile`:
+
+- `FROM ... AS base` creates a reusable stage.
+- `COPY go.mod go.sum` before full source enables dependency-layer caching.
+- `RUN go mod download` caches dependencies between builds.
+- `FROM ... AS builder` compiles binary once.
+- `FROM alpine ... AS prod` makes final image much smaller by copying only compiled binary.
+
+For `apps/agent-service/Dockerfile`:
+
+- `COPY pyproject.toml uv.lock` before app code allows dependency cache reuse.
+- `uv sync --frozen` uses lockfile-resolved dependencies.
+- separate `dev` and `prod` targets choose different runtime commands (`--reload` only in dev).
+
+### 6) Networking explained (critical Docker concept)
+
+- Inside Compose network, services reach each other by service name:
+  - API reaches DB at host `postgres`
+  - agent reaches API at `http://api:8080` (dev) or `http://api-prod:8080` (prod)
+- `localhost` inside a container means that same container, not your host machine.
+
+### 7) Useful day-to-day commands
+
+```bash
+# Start in background
+docker compose --profile dev up --build -d
+
+# View logs for one service
+docker compose logs -f api
+docker compose logs -f agent-service
+
+# Rebuild only one service
+docker compose build api
+
+# Open a shell in running container
+docker compose exec api sh
+docker compose exec agent-service sh
+
+# Stop everything (keeps DB volume)
+docker compose down
+
+# Stop and delete DB volume too (data loss)
+docker compose down -v
+```
+
+### 8) Common beginner pitfalls
+
+- Using `localhost` for cross-container calls (use service names instead).
+- Forgetting to set `OPENAI_API_KEY` in `.env`.
+- Assuming `depends_on` means app is fully ready (healthchecks help but app-level retries are still useful).
+- Not rebuilding after dependency changes (`go.mod`, `uv.lock`, `pyproject.toml`).
+- Removing volumes accidentally with `down -v` and losing local DB data.
 
 ## 🚀 Run the app (step by step)
 

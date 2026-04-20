@@ -1,0 +1,29 @@
+.git
+.gitignore
+.cursor
+**/.DS_Store
+**/.idea
+**/.vscode
+
+# Python virtual environments and caches
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+
+# Go build outputs and caches
+**/bin
+**/dist
+**/*.test
+**/coverage.out
+
+# Env and local-only files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs and temp
+**/*.log
+**/tmp
+**/temp

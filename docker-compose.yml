@@ -1,0 +1,115 @@
+name: multi-agent-copilot
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mac_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: dev
+    container_name: mac_api_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${API_PORT}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "${API_PORT}:8080"
+
+  agent-service:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: apps/agent-service/Dockerfile
+      target: dev
+    container_name: mac_agent_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      BACKEND_URL: http://api:8080
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./apps/agent-service:/app
+    ports:
+      - "${AGENT_PORT}:8000"
+
+  api-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: prod
+    container_name: mac_api_prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${API_PORT}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT}:8080"
+
+  agent-service-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: apps/agent-service/Dockerfile
+      target: prod
+    container_name: mac_agent_prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      BACKEND_URL: http://api-prod:8080
+    depends_on:
+      api-prod:
+        condition: service_started
+    ports:
+      - "${AGENT_PORT}:8000"
+
+volumes:
+  postgres_data:
