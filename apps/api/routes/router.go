@@ -27,7 +27,7 @@ func SetUpRouter() *gin.Engine {
 
 	router.POST("/signup", handlers.Signup);
 	router.POST("/login", handlers.Login);
-
+ 
 	// Protected Routes
 	authRoutes := router.Group("/")
 	authRoutes.Use(middleware.AuthMiddleware())
