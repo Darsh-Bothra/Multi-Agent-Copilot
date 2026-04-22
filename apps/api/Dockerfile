@@ -21,3 +21,9 @@ COPY --from=builder /out/server /app/server
 EXPOSE 8080
 USER appuser
 CMD ["/app/server"]
+
+FROM base AS dev
+COPY apps/api/ ./
+RUN go install github.com/air-verse/air@latest
+EXPOSE 8080
+CMD ["air", "-c", ".air.toml"]
