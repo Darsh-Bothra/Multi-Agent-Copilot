@@ -248,6 +248,7 @@ cd apps/api
 
 Create `apps/api/.env` if you want non-default credentials (otherwise the API uses the defaults in the **Go API** table under [Configuration](#configuration)):
 
+
 ```bash
 # Example only — adjust to match your PostgreSQL setup
 PORT=8080
